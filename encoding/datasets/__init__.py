@@ -1,6 +1,5 @@
 import warnings
 from torchvision.datasets import *
-from .base import *
 from .coco import COCOSegmentation
 from .ade20k import ADE20KSegmentation
 from .pascal_voc import VOCSegmentation
@@ -9,6 +8,7 @@ from .pcontext import ContextSegmentation
 from .cityscapes import CitySegmentation
 from .imagenet import ImageNetDataset
 from .minc import MINCDataset
+from .rgo_grass import RGoGrassSegmentation
 
 from ..utils import EncodingDeprecationWarning
 
@@ -22,6 +22,8 @@ datasets = {
     'imagenet': ImageNetDataset,
     'minc': MINCDataset,
     'cifar10': CIFAR10,
+    'rgo_grass': RGoGrassSegmentation,
+    # 'rgo_grass': RGoGrassSegmentation,
 }
 
 acronyms = {
@@ -33,6 +35,7 @@ acronyms = {
     'citys': 'citys',
     'minc': 'minc',
     'cifar10': 'cifar10',
+    'rgo_grass': 'ade',  # or 'citys'?
 }
 
 def get_dataset(name, **kwargs):

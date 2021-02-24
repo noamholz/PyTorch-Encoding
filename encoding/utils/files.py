@@ -5,21 +5,51 @@ import shutil
 import hashlib
 from tqdm import tqdm
 import torch
+import cv2
 
-__all__ = ['save_checkpoint', 'download', 'mkdir', 'check_sha1']
+__all__ = ['save_checkpoint', 'save_images', 'save_scripts', 'save_log_csv', 'download', 'mkdir', 'check_sha1']
+
+def prep_results_dir(args):
+    if hasattr(args, 'backbone'):
+        directory = "runs/%s/%s/%s/%s/" % (args.dataset, args.model, args.backbone, args.checkname)
+    else:
+        directory = "runs/%s/%s/%s/" % (args.dataset, args.model, args.checkname)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    return directory
+
 
 def save_checkpoint(state, args, is_best, filename='checkpoint.pth.tar'):
     """Saves checkpoint to disk"""
-    if hasattr(args, 'backbone'):
-        directory = "runs/%s/%s/%s/%s/"%(args.dataset, args.model, args.backbone, args.checkname)
-    else:
-        directory = "runs/%s/%s/%s/"%(args.dataset, args.model, args.checkname)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    directory = prep_results_dir(args)
     filename = directory + filename
     torch.save(state, filename)
     if is_best:
         shutil.copyfile(filename, directory + 'model_best.pth.tar')
+
+
+def save_images(filename, img, args):
+    """Saves checkpoint to disk"""
+    directory = prep_results_dir(args) + 'examples/'
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    filename = directory + filename
+    cv2.imwrite(filename, img)
+
+
+def save_scripts(args):
+    directory = prep_results_dir(args)
+    # os.makedirs(directory + 'scripts')
+    ignore_func = lambda d, files: [f for f in files if (os.path.isfile(os.path.join(d, f)) and not f.endswith('.py'))
+                                    or ('runs' in d)]
+    shutil.copytree('../../encoding', directory + 'scripts/encoding', ignore=ignore_func)
+    shutil.copytree('../../experiments/segmentation', directory + 'scripts/experiments/segmentation', ignore=ignore_func)
+
+
+def save_log_csv(df, args, filename='train_log.csv'):
+    directory = prep_results_dir(args)
+    filename = directory + filename
+    df.to_csv(filename, index=False)
 
 
 def download(url, path=None, overwrite=False, sha1_hash=None):

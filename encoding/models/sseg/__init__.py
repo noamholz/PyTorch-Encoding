@@ -17,4 +17,5 @@ def get_segmentation_model(name, **kwargs):
         'upernet': get_upernet,
         'deeplab': get_deeplab,
     }
+    print(get_deeplab.__module__)
     return models[name.lower()](**kwargs)

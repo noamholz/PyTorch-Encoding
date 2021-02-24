@@ -13,7 +13,7 @@ import numpy as np
 import torch
 
 __all__ = ['accuracy', 'get_pixacc_miou',
-           'SegmentationMetric', 'batch_intersection_union', 'batch_pix_accuracy',
+           'SegmentationMetric', 'batch_intersection_union', 'batch_pix_accuracy', 'batch_pix_accuracy_rgo',
            'pixel_accuracy', 'intersection_and_union']
 
 def accuracy(output, target, topk=(1,)):
@@ -100,6 +100,31 @@ def batch_pix_accuracy(output, target):
 
     pixel_labeled = np.sum(target > 0)
     pixel_correct = np.sum((predict == target)*(target > 0))
+    assert pixel_correct <= pixel_labeled, \
+        "Correct area should be smaller than Labeled"
+    return pixel_correct, pixel_labeled
+
+
+def batch_pix_accuracy_rgo(output, target, metric_box=None):
+    """Batch Pixel Accuracy
+    Args:
+        predict: input 4D tensor
+        target: label 3D tensor
+    """
+    # predict = torch.unsqueeze(torch.max(output, 0)[1], 0)
+    predict = torch.max(output, 1)[1]
+    # print('*'*30)
+    # print(output.shape, predict.shape, torch.max(output, 0)[1].shape, target.shape)
+    predict = predict.cpu().numpy().astype('int64')
+    target = target.cpu().numpy().astype('int64')
+
+    # evaluate metric only within given box
+    if metric_box:
+        predict = predict[:, metric_box[0]:metric_box[0] + metric_box[2], metric_box[1]:metric_box[1] + metric_box[3]]
+        target = target[:, metric_box[0]:metric_box[0] + metric_box[2], metric_box[1]:metric_box[1] + metric_box[3]]
+
+    pixel_labeled = np.sum(target > -1)
+    pixel_correct = np.sum((predict == target)*(target > -1))
     assert pixel_correct <= pixel_labeled, \
         "Correct area should be smaller than Labeled"
     return pixel_correct, pixel_labeled

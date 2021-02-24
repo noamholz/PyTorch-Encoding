@@ -127,14 +127,21 @@ class ASPP_Module(nn.Module):
         return self.project(y)
 
 def get_deeplab(dataset='pascal_voc', backbone='resnet50s', pretrained=False,
-            root='~/.encoding/models', **kwargs):
+            root='../../pretrained_models', **kwargs):
     # infer number of classes
     from ...datasets import datasets, acronyms
     model = DeepLabV3(datasets[dataset.lower()].NUM_CLASS, backbone=backbone, root=root, **kwargs)
+    # model = nn.DataParallel(model)
     if pretrained:
         from ..model_store import get_model_file
-        model.load_state_dict(torch.load(
-            get_model_file('deeplab_%s_%s'%(backbone, acronyms[dataset]), root=root)))
+        print('loading model ' + 'deeplab_%s_%s'%(backbone, acronyms[dataset]))
+        pretrained_dict = torch.load(
+            get_model_file('deeplab_%s_%s'%(backbone, acronyms[dataset]), root=root))
+        # Noam: for the case where N_CLASS is different from the pretrained model:
+        pretrained_dict.pop('head.block.4.weight', None)
+        pretrained_dict.pop('head.block.4.bias', None)
+        # ----
+        model.load_state_dict(pretrained_dict, strict=False)
     return model
 
 def get_deeplab_resnet50_ade(pretrained=False, root='~/.encoding/models', **kwargs):
